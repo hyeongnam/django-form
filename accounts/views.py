@@ -4,10 +4,13 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 
 
 def signup(request):
+    if request.user.is_authenticated:
+        return redirect('boards:index')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            auth_login(request, user)
             return redirect('boards:index')
     else:  # GET accounts/signup/
         form = UserCreationForm()
@@ -16,6 +19,8 @@ def signup(request):
 
 
 def login(request):
+    if request.user.is_authenticated:
+        return redirect('boards:index')
     if request.method == 'POST':
         form = AuthenticationForm(request, request.POST)
         #  사용자 입력 유효성 검사
