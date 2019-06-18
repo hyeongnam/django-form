@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
+from django.contrib.auth.decorators import login_required
 from .models import Board
 from .forms import BoardForm
 
@@ -12,12 +13,16 @@ def index(request):
     return render(request, 'boards/index.html', context)
 
 
+@login_required
 @require_http_methods(['GET', 'POST'])
 def create(request):
     if request.method == 'POST':
         form = BoardForm(request.POST)
         if form.is_valid():
-            board = form.save()
+            # commit이 False면 form만 save된다.
+            board = form.save(commit=False)
+            board.user = request.user
+            board.save()
             return redirect('boards:detail', board.pk)
     else:
         form = BoardForm()
@@ -42,6 +47,7 @@ def delete(request, board_pk):
     return redirect('boards:index')
 
 
+@login_required
 @require_http_methods(['GET', 'POST'])
 def update(request, board_pk):
     board = get_object_or_404(Board, pk=board_pk)
